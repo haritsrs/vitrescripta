@@ -7,10 +7,10 @@ const LandingPage = () => {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <div className="min-h-screen bg-neutral-100 flex flex-col font-serif relative overflow-hidden">
-      {/* Asymmetric Gold Overlay */}
+    <div className="min-h-screen bg-blue-900 flex flex-col font-serif relative overflow-hidden">
+      {/* Asymmetric Gradient Overlay */}
       <div 
-        className={`absolute top-0 right-0 w-2/3 h-full bg-gradient-to-bl from-gold-500/20 to-transparent transition-all duration-700 ease-in-out 
+        className={`absolute top-0 right-0 w-2/3 h-full bg-gradient-to-bl from-red-500/20 to-transparent transition-all duration-700 ease-in-out 
         ${isHovered ? 'rotate-6 scale-105' : 'rotate-0'}`}
       ></div>
 
@@ -22,16 +22,16 @@ const LandingPage = () => {
       >
         {/* Header Fragment */}
         <header className="col-span-12 py-8 flex justify-between items-center">
-          <h1 className="text-4xl font-extralight tracking-widest text-gold-600 uppercase transform -skew-x-6">
+          <h1 className="text-4xl font-extrabold tracking-widest text-red-500 uppercase transform -skew-x-6">
             Vīgintī Trēs in Scriptura
           </h1>
           <nav className="space-x-6">
-            <a href="#" className="text-neutral-700 hover:text-gold-600 text-lg relative group">
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gold-600 transition-all duration-300 group-hover:w-full"></span>
+            <a href="#" className="text-blue-100 hover:text-red-500 text-lg relative group">
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-red-500 transition-all duration-300 group-hover:w-full"></span>
               Reflections
             </a>
-            <a href="#" className="text-neutral-700 hover:text-gold-600 text-lg relative group">
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gold-600 transition-all duration-300 group-hover:w-full"></span>
+            <a href="#" className="text-blue-100 hover:text-red-500 text-lg relative group">
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-red-500 transition-all duration-300 group-hover:w-full"></span>
               Archives
             </a>
           </nav>
@@ -40,24 +40,24 @@ const LandingPage = () => {
         {/* Content Blocks */}
         <div className="col-span-7 space-y-8 mt-16">
           <div className="flex items-center space-x-6">
-            <Pen className="text-gold-500 transform -rotate-12" size={50} />
-            <h2 className="text-6xl font-thin text-neutral-800 tracking-wide transform -skew-x-3">
+            <Pen className="text-red-500 transform -rotate-12" size={50} />
+            <h2 className="text-6xl font-bold text-blue-100 tracking-wide transform -skew-x-3">
               Unfolding
               <br />
-              <span className="text-gold-600">Consciousness</span>
+              <span className="text-red-500">Consciousness</span>
             </h2>
           </div>
 
-          <p className="text-xl text-neutral-700 leading-relaxed tracking-wide opacity-80">
+          <p className="text-xl text-blue-200 leading-relaxed tracking-wide opacity-80">
             A fragmentary exploration of thought, where words dance between reality and imagination, creating landscapes of meaning.
           </p>
 
           <div className="flex space-x-6">
             <a 
               href="/writings" 
-              className="relative group overflow-hidden px-8 py-4 border border-gold-600 text-gold-600 uppercase tracking-wider"
+              className="relative group overflow-hidden px-8 py-4 border border-red-500 text-red-500 uppercase tracking-wider"
             >
-              <span className="absolute inset-0 bg-gold-600 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300 z-0"></span>
+              <span className="absolute inset-0 bg-red-500 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300 z-0"></span>
               <span className="relative z-10 group-hover:text-white transition-colors">
                 Explore Writings
               </span>
@@ -67,11 +67,11 @@ const LandingPage = () => {
 
         {/* Experimental Quote Block */}
         <div className="col-span-5 mt-16 relative">
-          <div className="bg-white shadow-2xl p-8 border-l-4 border-gold-600 transform -rotate-3 hover:rotate-0 transition-transform">
-            <blockquote className="italic text-xl text-neutral-700 mb-6 relative">
-              <span className="absolute -left-6 top-0 text-gold-500 text-5xl opacity-30">"</span>
+          <div className="bg-blue-800 shadow-2xl p-8 border-l-4 border-red-500 transform -rotate-3 hover:rotate-0 transition-transform">
+            <blockquote className="italic text-xl text-blue-100 mb-6 relative">
+              <span className="absolute -left-6 top-0 text-red-500 text-5xl opacity-30">"</span>
               Thoughts are but ephemeral sculptures, carved in the marble of momentary perception.
-              <span className="absolute -right-6 bottom-0 text-gold-500 text-5xl opacity-30">"</span>
+              <span className="absolute -right-6 bottom-0 text-red-500 text-5xl opacity-30">"</span>
             </blockquote>
           </div>
         </div>
@@ -79,7 +79,7 @@ const LandingPage = () => {
 
       {/* Minimalist Footer */}
       <footer className="py-6 text-center relative z-10">
-        <p className="text-neutral-500 tracking-wide">
+        <p className="text-blue-300 tracking-wide">
           © MMXXIV Vīgintī Trēs in Scriptura
         </p>
       </footer>
