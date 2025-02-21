@@ -47,7 +47,7 @@ const FloatingLeaf = ({ delay }: { delay: number }) => {
 };
 
 const LandingPage = () => {
-  const [activeSection, setActiveSection] = useState(null);
+  const [activeSection, setActiveSection] = useState<string | null>(null);
   const [quote, setQuote] = useState(MEDITATION_QUOTES[0]);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -55,6 +55,10 @@ const LandingPage = () => {
     setQuote(MEDITATION_QUOTES[Math.floor(Math.random() * MEDITATION_QUOTES.length)]);
     setIsVisible(true);
   }, []);
+
+  const handleSectionHover = (section: string | null) => {
+    setActiveSection(section);
+  };
 
   const leaves = Array.from({ length: 12 }, (_, i) => (
     <FloatingLeaf key={i} delay={i * 1.5} />
@@ -135,11 +139,11 @@ const LandingPage = () => {
             <nav className="flex gap-12">
               {['journal', 'archive', 'about'].map((item) => (
                 <Link href={`/${item}`} key={item}>
-                <span className="text-gray-800 hover:text-gold-600 transition-colors duration-300 lowercase relative group tracking-wide cursor-pointer">
-                  {item}
-                  <span className="absolute -bottom-1 left-0 w-full h-px bg-gold-600/30 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
-                </span>
-              </Link>
+                  <span className="text-gray-800 hover:text-gold-600 transition-colors duration-300 lowercase relative group tracking-wide cursor-pointer">
+                    {item}
+                    <span className="absolute -bottom-1 left-0 w-full h-px bg-gold-600/30 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+                  </span>
+                </Link>
               ))}
             </nav>
           </div>
@@ -152,9 +156,11 @@ const LandingPage = () => {
             <div className="col-span-7 space-y-16">
               <div 
                 className="space-y-8 transform transition-all duration-500"
+                onMouseEnter={() => handleSectionHover('main')}
+                onMouseLeave={() => handleSectionHover(null)}
                 style={{
-                  opacity: activeSection ? 0.5 : 1,
-                  transform: activeSection ? 'translateY(10px)' : 'translateY(0)'
+                  opacity: activeSection && activeSection !== 'main' ? 0.5 : 1,
+                  transform: activeSection && activeSection !== 'main' ? 'translateY(10px)' : 'translateY(0)'
                 }}
               >
                 <Wind className="text-gold-600" size={32} />
@@ -177,7 +183,7 @@ const LandingPage = () => {
               {/* Quote of the Day */}
               <div className="bg-white/50 backdrop-blur-sm p-8 rounded-sm border-l-2 border-gold-600/30">
                 <blockquote className="text-gray-700 italic">
-                  "{quote.text}"
+                  &ldquo;{quote.text}&rdquo;
                   <footer className="mt-2 text-sm text-gold-600">— {quote.author}</footer>
                 </blockquote>
               </div>
@@ -197,9 +203,11 @@ const LandingPage = () => {
                   <div 
                     key={item}
                     className="relative p-6 transform transition-all duration-500 bg-gradient-to-r hover:from-gold-600/5 hover:to-transparent"
+                    onMouseEnter={() => handleSectionHover(item.toLowerCase())}
+                    onMouseLeave={() => handleSectionHover(null)}
                     style={{
-                      opacity: activeSection ? 0.5 : 1,
-                      transform: `translateY(${activeSection ? '10px' : '0'})`,
+                      opacity: activeSection && activeSection !== item.toLowerCase() ? 0.5 : 1,
+                      transform: `translateY(${activeSection && activeSection !== item.toLowerCase() ? '10px' : '0'})`,
                       transitionDelay: `${index * 100}ms`
                     }}
                   >
