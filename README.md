@@ -1,2 +1,2 @@
 ## Vīgintī Trēs in Scriptura
-A blog website
+A Writing website
