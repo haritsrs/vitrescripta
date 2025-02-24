@@ -187,13 +187,14 @@ const LandingPage = () => {
                   <footer className="mt-2 text-sm text-gold-600">— {quote.author}</footer>
                 </blockquote>
               </div>
-
-              <div className="pt-8">
-                <button className="group relative px-8 py-4 bg-gradient-to-r from-gold-600/10 to-transparent text-gold-600 overflow-hidden">
+                <div className="pt-8">
+                <Link href="/scriptures">
+                  <button className="group relative px-8 py-4 bg-gradient-to-r from-gold-600/10 to-transparent text-gold-600 overflow-hidden">
                   <span className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-gold-600 to-transparent transform origin-left scale-x-0 transition-transform duration-500 group-hover:scale-x-100"></span>
                   begin reading
-                </button>
-              </div>
+                  </button>
+                </Link>
+                </div>
             </div>
 
             {/* Right Content */}
