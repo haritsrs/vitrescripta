@@ -56,7 +56,6 @@ const AboutPage = () => {
 
   return (
     <div className="min-h-screen bg-stone-50 font-sans relative overflow-hidden">
-      {/* CSS for Animations */}
       <style jsx global>{`
         @keyframes float {
           0% {
@@ -248,7 +247,6 @@ const AboutPage = () => {
           </div>
         </main>
 
-        {/* Footer */}
         <footer className="absolute bottom-0 w-full py-6 text-center text-gray-600 text-sm bg-white/50 backdrop-blur-sm">
           <p>© 2024 · <span className="text-gold-600">crafted with intention</span></p>
         </footer>
