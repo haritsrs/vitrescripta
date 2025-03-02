@@ -187,7 +187,6 @@ const AboutPage = () => {
               </div>
             </div>
 
-            {/* Right Content */}
             <div className="col-span-5 space-y-12">
               <div 
                 className="bg-white/50 backdrop-blur-sm p-8 rounded-sm border-l-2 border-gold-600/30 transform transition-all duration-500"
