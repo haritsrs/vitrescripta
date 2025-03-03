@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { Wind, Feather } from 'lucide-react';
 import Link from 'next/link';
 import Img from 'next/image';
+import { WritingQuote, FloatingLeafProps } from '../types/types';
 
-const WRITING_QUOTES = [
+const WRITING_QUOTES: WritingQuote[] = [
   { text: "Write what you know", author: "Mark Twain" },
   { text: "The first draft is just you telling yourself the story", author: "Terry Pratchett" },
   { text: "You can always edit a bad page. You can't edit a blank page", author: "Jodi Picoult" },
@@ -13,7 +14,7 @@ const WRITING_QUOTES = [
   { text: "The scariest moment is always just before you start", author: "Stephen King" }
 ];
 
-const FloatingLeaf = ({ delay }: { delay: number }) => {
+const FloatingLeaf = ({ delay }: FloatingLeafProps) => {
   const startPosition = Math.random() * 100;
   const duration = 15 + Math.random() * 10;
   const size = 16 + Math.random() * 16;
@@ -49,7 +50,7 @@ const FloatingLeaf = ({ delay }: { delay: number }) => {
 
 const LandingPage = () => {
   const [activeSection, setActiveSection] = useState<string | null>(null);
-  const [quote, setQuote] = useState(WRITING_QUOTES[0]);
+  const [quote, setQuote] = useState<WritingQuote>(WRITING_QUOTES[0]);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {

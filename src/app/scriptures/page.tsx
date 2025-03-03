@@ -3,16 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Scroll, Feather, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-
-// Define types for post data
-interface ScripturePost {
-  id: number;
-  title: string;
-  date: string;
-  excerpt: string;
-  content: string;
-  tags: string[];
-}
+import { ScripturePost, FloatingLeafProps } from '../../types/types';
 
 // Mock data for writings
 const SCRIPTURE_POSTS: ScripturePost[] = [
@@ -67,10 +58,6 @@ I'm learning to hold this tension—to use words while remembering their limitat
     tags: ["language", "meditation", "truth"]
   }
 ];
-
-interface FloatingLeafProps {
-  delay: number;
-}
 
 const FloatingLeaf = ({ delay }: FloatingLeafProps) => {
   const startPosition = Math.random() * 100;

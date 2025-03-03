@@ -8,32 +8,7 @@ import { getDatabase, ref as databaseRef, push, serverTimestamp, get, update, re
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../../../firebase';
-
-interface FirebasePost {
-  key: string;
-  title: string;
-  content: string;
-  imageUrl: string;
-  createdAt: string | null;
-  userId: string;
-  username: string;
-  profilePicture: string;
-  likes: number;
-  likedBy: string[];
-  category: 'journal' | 'archive' | 'notes';
-  status: 'published' | 'draft';
-  excerpt?: string;
-}
-
-interface NewPost {
-  title: string;
-  category: 'journal' | 'archive' | 'notes';
-  content: string;
-  excerpt: string;
-  imageUrl?: string;
-}
-
-type TabType = 'create' | 'manage' | 'journal' | 'archive';
+import { FirebasePost, NewPost, TabType  } from '../../types/types';
 
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('create');

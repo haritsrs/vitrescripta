@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { BookOpen, Feather } from 'lucide-react';
 import Link from 'next/link';
+import { FloatingLeafProps } from '../../types/types';
 
-const FloatingLeaf = ({ delay }: { delay: number }) => {
+const FloatingLeaf = ({ delay }: FloatingLeafProps) => {
   const startPosition = Math.random() * 100;
   const duration = 15 + Math.random() * 10;
   const size = 16 + Math.random() * 16;
