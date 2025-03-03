@@ -4,8 +4,18 @@ import React, { useState, useEffect } from 'react';
 import { Scroll, Feather, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
+// Define types for post data
+interface ScripturePost {
+  id: number;
+  title: string;
+  date: string;
+  excerpt: string;
+  content: string;
+  tags: string[];
+}
+
 // Mock data for writings
-const SCRIPTURE_POSTS = [
+const SCRIPTURE_POSTS: ScripturePost[] = [
   {
     id: 1,
     title: "The Stillness Between Thoughts",
@@ -58,7 +68,11 @@ I'm learning to hold this tension—to use words while remembering their limitat
   }
 ];
 
-const FloatingLeaf = ({ delay }) => {
+interface FloatingLeafProps {
+  delay: number;
+}
+
+const FloatingLeaf = ({ delay }: FloatingLeafProps) => {
   const startPosition = Math.random() * 100;
   const duration = 15 + Math.random() * 10;
   const size = 16 + Math.random() * 16;
@@ -93,8 +107,8 @@ const FloatingLeaf = ({ delay }) => {
 };
 
 const ScripturesPage = () => {
-  const [selectedPost, setSelectedPost] = useState(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<ScripturePost | null>(null);
+  const [isVisible, setIsVisible] = useState<boolean>(false);
   
   useEffect(() => {
     setIsVisible(true);
@@ -105,7 +119,7 @@ const ScripturesPage = () => {
   ));
 
   // Function to add a new scripture post (mock)
-  const addScripture = (newPost) => {
+  const addScripture = (newPost: ScripturePost) => {
     // In a real app, this would be an API call
     console.log("Adding new scripture post:", newPost);
     alert("In a real implementation, this would save your post to a database.");
