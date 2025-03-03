@@ -7,7 +7,7 @@ import Image from "next/legacy/image";
 import { getDatabase, ref as databaseRef, push, serverTimestamp, get, update, remove } from 'firebase/database';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { User, onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../../firebase';
+import { auth } from '../../../firebase';
 
 interface FirebasePost {
   key: string;
