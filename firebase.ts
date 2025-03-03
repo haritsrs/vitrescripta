@@ -1,6 +1,6 @@
 // firebase.ts
 import { initializeApp } from 'firebase/app';
-import { getAnalytics } from 'firebase/analytics';
+import { getAnalytics, isSupported } from 'firebase/analytics';
 import { getAuth } from 'firebase/auth';
 import { getDatabase } from 'firebase/database';
 import { getStorage } from 'firebase/storage';
@@ -18,7 +18,12 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+let analytics;
+isSupported().then((isSupported) => {
+  if (isSupported) {
+    analytics = getAnalytics(app);
+  }
+});
 
 // Export Firebase features
 export const auth = getAuth(app);

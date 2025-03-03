@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { BookOpen, Feather, Wind } from 'lucide-react';
+import { BookOpen, Feather } from 'lucide-react';
 import Link from 'next/link';
 
 const FloatingLeaf = ({ delay }: { delay: number }) => {
@@ -165,7 +165,7 @@ const AboutPage = () => {
                 <div className="relative">
                   <div className="absolute -left-3 top-0 bottom-0 w-1 bg-gradient-to-b from-gold-600/50 to-transparent"></div>
                   <p className="text-gray-700 text-lg leading-relaxed tracking-wide pl-6">
-                    <span className="text-gold-600">Vīgintī Trēs</span> — Latin for "twenty-three" — represents the number of minutes we dedicate each day to focused mindfulness through written contemplation.
+                    <span className="text-gold-600">Vīgintī Trēs</span> — Latin for &quot;twenty-three&quot; — represents the number of minutes we dedicate each day to focused mindfulness through written contemplation.
                   </p>
                 </div>
               </div>
@@ -181,7 +181,7 @@ const AboutPage = () => {
 
                 <div className="bg-white/50 backdrop-blur-sm p-8 rounded-sm border-l-2 border-gold-600/30">
                   <p className="text-gray-700 italic m-0">
-                    "The practice is simple: set aside twenty-three minutes, let your pen meet paper, and allow your thoughts to flow without judgment. In this space between intention and release, we find our truest voice."
+                    &quot;The practice is simple: set aside twenty-three minutes, let your pen meet paper, and allow your thoughts to flow without judgment. In this space between intention and release, we find our truest voice.&quot;
                   </p>
                 </div>
               </div>

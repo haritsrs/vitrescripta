@@ -118,14 +118,6 @@ const ScripturesPage = () => {
     <FloatingLeaf key={i} delay={i * 1.5} />
   ));
 
-  // Function to add a new scripture post (mock)
-  const addScripture = (newPost: ScripturePost) => {
-    // In a real app, this would be an API call
-    console.log("Adding new scripture post:", newPost);
-    alert("In a real implementation, this would save your post to a database.");
-    // You would typically redirect or update state here
-  };
-
   return (
     <div className="min-h-screen bg-stone-50 font-sans relative overflow-hidden">
       {/* CSS for Animations */}

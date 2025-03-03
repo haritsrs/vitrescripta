@@ -14,7 +14,7 @@ interface FirebasePost {
   title: string;
   content: string;
   imageUrl: string;
-  createdAt: any;
+  createdAt: string | null;
   userId: string;
   username: string;
   profilePicture: string;
@@ -156,7 +156,7 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handlePostSubmit = async (e: React.FormEvent<HTMLFormElement>, status: 'published' | 'draft' = 'published') => {
+  const handlePostSubmit = async (e: React.FormEvent<HTMLFormElement>, status: 'published' | 'draft' = 'published'): Promise<void> => {
     e.preventDefault();
     
     if (!user) {
@@ -255,7 +255,7 @@ const AdminDashboard: React.FC = () => {
   };
   
   const handleSaveDraft = async () => {
-    await handlePostSubmit(new Event('submit') as any, 'draft');
+    await handlePostSubmit(new Event('submit') as unknown as React.FormEvent<HTMLFormElement>, 'draft');
   };
 
   const handleDeletePost = async (key: string) => {
@@ -689,7 +689,7 @@ const AdminDashboard: React.FC = () => {
                             </h3>
                             <div className="text-sm text-gray-600 mt-1">
                               <span className="mr-3">Category: {post.category}</span>
-                              <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                              <span>{post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'Unknown date'}</span>
                             </div>
                           </div>
                           
@@ -751,7 +751,7 @@ const AdminDashboard: React.FC = () => {
                                 )}
                               </h3>
                               <div className="text-sm text-gray-600 mt-1">
-                                <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                                <span>{post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'Unknown date'}</span>
                               </div>
                             </div>
                             
@@ -813,7 +813,7 @@ const AdminDashboard: React.FC = () => {
                                 )}
                               </h3>
                               <div className="text-sm text-gray-600 mt-1">
-                                <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                                <span>{post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'Unknown date'}</span>
                               </div>
                             </div>
                             

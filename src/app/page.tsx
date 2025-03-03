@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Wind, Feather } from 'lucide-react';
 import Link from 'next/link';
+import Img from 'next/image';
 
 const WRITING_QUOTES = [
   { text: "Write what you know", author: "Mark Twain" },
@@ -155,7 +156,7 @@ const LandingPage = () => {
   {/* Profile Image */}
   <div className="col-span-3 flex flex-col items-center">
     <div className="rounded-full overflow-hidden border-4 border-gold-600/20 mb-4 shadow-lg">
-      <img src="/img/pfp.JPG" alt="Profile" className="w-48 h-48 object-cover" />
+      <Img src="/img/pfp.JPG" alt="Profile" width={192} height={192} className="w-48 h-48 object-cover" />
     </div>
     <h3 className="text-xl text-gray-800 font-medium mt-2">Harits Raharjo Setiono</h3>
     <p className="text-gray-600 text-sm">University Student</p>
