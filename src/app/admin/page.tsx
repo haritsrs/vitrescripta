@@ -3,15 +3,25 @@
 import React, { useState, useEffect } from 'react';
 import { Wind, Feather, Book, Archive, FileText, Plus, Save, Eye, Edit, Trash2, ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
+import Image from "next/legacy/image";
+import { getDatabase, ref as databaseRef, push, serverTimestamp, get, update, remove } from 'firebase/database';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { User, onAuthStateChanged } from 'firebase/auth';
+import { auth } from '../../firebase';
 
-// Define TypeScript interfaces
-interface Post {
-  id: number;
+interface FirebasePost {
+  key: string;
   title: string;
+  content: string;
+  imageUrl: string;
+  createdAt: any;
+  userId: string;
+  username: string;
+  profilePicture: string;
+  likes: number;
+  likedBy: string[];
   category: 'journal' | 'archive' | 'notes';
   status: 'published' | 'draft';
-  date: string;
-  content?: string;
   excerpt?: string;
 }
 
@@ -20,82 +30,274 @@ interface NewPost {
   category: 'journal' | 'archive' | 'notes';
   content: string;
   excerpt: string;
+  imageUrl?: string;
 }
 
 type TabType = 'create' | 'manage' | 'journal' | 'archive';
 
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('create');
-  const [posts, setPosts] = useState<Post[]>([
-    { id: 1, title: "The Art of Mindful Writing", category: "journal", status: "published", date: "2024-02-15" },
-    { id: 2, title: "Finding Inspiration in Everyday Life", category: "notes", status: "draft", date: "2024-02-28" },
-    { id: 3, title: "My Journey as a Writer", category: "archive", status: "published", date: "2024-01-10" },
-  ]);
-  
-  const [newPost, setNewPost] = useState<NewPost>({
-    title: '',
-    category: 'journal',
-    content: '',
-    excerpt: ''
-  });
-  
-  const [editingPost, setEditingPost] = useState<number | null>(null);
+  const [posts, setPosts] = useState<FirebasePost[]>([]);
+  const [newPost, setNewPost] = useState<NewPost>({ title: '', category: 'journal', content: '', excerpt: '' });
+  const [editingPost, setEditingPost] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState<boolean>(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [error, setError] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imageUrl, setImageUrl] = useState<string>('');
+
+  const storage = getStorage();
+  const database = getDatabase();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, setUser);
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const blogPostsRef = databaseRef(database, 'blog-posts');
+        const snapshot = await get(blogPostsRef);
+        
+        if (snapshot.exists()) {
+          const postsData: FirebasePost[] = [];
+          snapshot.forEach((childSnapshot) => {
+            const post = childSnapshot.val();
+            postsData.push({
+              key: childSnapshot.key || '',
+              ...post,
+              category: post.category || 'journal',
+              status: post.status || 'published'
+            });
+          });
+          
+          postsData.sort((a, b) => (b.createdAt ? new Date(b.createdAt).getTime() : 0) - (a.createdAt ? new Date(a.createdAt).getTime() : 0));
+          setPosts(postsData);
+        }
+      } catch (error) {
+        console.error('Error fetching posts:', error);
+        setError('Failed to load posts. Please try again.');
+        setTimeout(() => setError(''), 3000);
+      }
+    };
+
+    fetchPosts();
+  }, [database]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setNewPost({ 
-      ...newPost, 
-      [name]: value as string 
-    });
+    setNewPost({ ...newPost, [name]: value });
   };
 
-  const handlePostSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (editingPost) {
-      setPosts(posts.map(post => post.id === editingPost ? 
-        { ...post, ...newPost, status: 'published' as const } : post));
-      setEditingPost(null);
-    } else {
-      const newId = Math.max(...posts.map(post => post.id), 0) + 1;
-      setPosts([...posts, { 
-        id: newId, 
-        ...newPost, 
-        status: 'published' as const, 
-        date: new Date().toISOString().split('T')[0] 
-      }]);
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!user) {
+      setError('You must be logged in to upload images.');
+      setTimeout(() => setError(''), 3000);
+      return;
     }
     
-    setNewPost({
-      title: '',
-      category: 'journal',
-      content: '',
-      excerpt: ''
-    });
+    const file = e.target.files?.[0];
+    if (file) {
+      const allowedMimeTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/svg+xml"];
+      const allowedExtensions = [".jpg", ".jpeg", ".png", ".gif", ".svg"];
+      const fileExtension = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
+      
+      if (allowedMimeTypes.includes(file.type) || allowedExtensions.includes(fileExtension)) {
+        setSelectedImage(file);
+        setImageUrl(URL.createObjectURL(file));
+      } else {
+        setError("Please upload a valid image file (JPG, JPEG, PNG, GIF, SVG).");
+        e.target.value = '';
+        setTimeout(() => setError(''), 3000);
+      }
+    }
   };
-  
-  const handleSaveDraft = () => {
-    const newId = Math.max(...posts.map(post => post.id), 0) + 1;
-    setPosts([...posts, { 
-      id: newId, 
-      ...newPost, 
-      status: 'draft' as const, 
-      date: new Date().toISOString().split('T')[0] 
-    }]);
+
+  const handleDeleteImage = () => {
+    setSelectedImage(null);
+    setImageUrl('');
+  };
+
+  const uploadImage = async (file: File): Promise<string> => {
+    if (!user) return '';
+
+    const imageRef = storageRef(storage, `blog-images/${Date.now()}-${file.name}`);
+
+    try {
+      let fileToUpload = file;
+      
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch('/api/sharp', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (response.ok) {
+          const optimizedImageBlob = await response.blob();
+          fileToUpload = new File([optimizedImageBlob], file.name, { type: 'image/jpeg' });
+        }
+      } catch (error) {
+        console.warn('Image optimization failed, uploading original:', error);
+      }
+
+      const snapshot = await uploadBytes(imageRef, fileToUpload);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      return downloadURL;
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      setError('Failed to upload image. Please try again.');
+      setTimeout(() => setError(''), 3000);
+      return '';
+    }
+  };
+
+  const handlePostSubmit = async (e: React.FormEvent<HTMLFormElement>, status: 'published' | 'draft' = 'published') => {
+    e.preventDefault();
     
-    setNewPost({
-      title: '',
-      category: 'journal',
-      content: '',
-      excerpt: ''
-    });
+    if (!user) {
+      setError('You must be logged in to create or edit posts.');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
+    if (!newPost.title.trim() || !newPost.content.trim()) {
+      setError('Please enter both a title and content for your post.');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      let uploadedImageUrl = '';
+      
+      if (selectedImage) {
+        uploadedImageUrl = await uploadImage(selectedImage);
+        if (!uploadedImageUrl) {
+          setLoading(false);
+          return;
+        }
+      }
+
+      const blogPostsRef = databaseRef(database, 'blog-posts');
+      
+      if (editingPost) {
+        const postRef = databaseRef(database, `blog-posts/${editingPost}`);
+        const existingPost = posts.find(post => post.key === editingPost);
+        
+        if (existingPost?.imageUrl && uploadedImageUrl) {
+          try {
+            const oldImageRef = storageRef(storage, existingPost.imageUrl);
+            await deleteObject(oldImageRef);
+          } catch (error) {
+            console.warn('Could not delete old image:', error);
+          }
+        }
+        
+        await update(postRef, {
+          title: newPost.title.trim(),
+          content: newPost.content.trim(),
+          excerpt: newPost.excerpt.trim(),
+          category: newPost.category,
+          status,
+          imageUrl: uploadedImageUrl || existingPost?.imageUrl || '',
+          updatedAt: serverTimestamp()
+        });
+        
+        setPosts(posts.map(post => post.key === editingPost ? {
+          ...post,
+          title: newPost.title.trim(),
+          content: newPost.content.trim(),
+          excerpt: newPost.excerpt.trim(),
+          category: newPost.category,
+          status,
+          imageUrl: uploadedImageUrl || post.imageUrl
+        } : post));
+      } else {
+        const newBlogPost = {
+          title: newPost.title.trim(),
+          content: newPost.content.trim(),
+          excerpt: newPost.excerpt.trim(),
+          imageUrl: uploadedImageUrl,
+          createdAt: serverTimestamp(),
+          userId: user.uid,
+          username: user.displayName || user.email || 'Anonymous',
+          profilePicture: user.photoURL || '/img/placehold.png',
+          category: newPost.category,
+          status,
+          likes: 0,
+          likedBy: []
+        };
+
+        const newPostRef = await push(blogPostsRef, newBlogPost);
+        
+        setPosts([{ key: newPostRef.key || '', ...newBlogPost, createdAt: new Date().toISOString() }, ...posts]);
+      }
+
+      setNewPost({ title: '', category: 'journal', content: '', excerpt: '' });
+      setEditingPost(null);
+      handleDeleteImage();
+      
+      setError(`Post successfully ${status === 'published' ? 'published' : 'saved as draft'}!`);
+      setTimeout(() => setError(''), 3000);
+    } catch (error) {
+      console.error('Error creating/updating post:', error);
+      setError('Failed to save post. Please try again.');
+      setTimeout(() => setError(''), 3000);
+    } finally {
+      setLoading(false);
+    }
   };
   
-  const handleDeletePost = (id: number) => {
-    setPosts(posts.filter(post => post.id !== id));
+  const handleSaveDraft = async () => {
+    await handlePostSubmit(new Event('submit') as any, 'draft');
+  };
+
+  const handleDeletePost = async (key: string) => {
+    if (!user) {
+      setError('You must be logged in to delete posts.');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
+    if (confirm('Are you sure you want to delete this post?')) {
+      setLoading(true);
+      
+      try {
+        const postToDelete = posts.find(post => post.key === key);
+        
+        const postRef = databaseRef(database, `blog-posts/${key}`);
+        await remove(postRef);
+        
+        if (postToDelete?.imageUrl) {
+          try {
+            const imageRef = storageRef(storage, postToDelete.imageUrl);
+            await deleteObject(imageRef);
+          } catch (error) {
+            console.warn('Could not delete image:', error);
+          }
+        }
+        
+        setPosts(posts.filter(post => post.key !== key));
+        
+        setError('Post deleted successfully.');
+        setTimeout(() => setError(''), 3000);
+      } catch (error) {
+        console.error('Error deleting post:', error);
+        setError('Failed to delete post. Please try again.');
+        setTimeout(() => setError(''), 3000);
+      } finally {
+        setLoading(false);
+      }
+    }
   };
   
-  const handleEditPost = (post: Post) => {
+  const handleEditPost = (post: FirebasePost) => {
     setActiveTab('create');
     setNewPost({
       title: post.title,
@@ -103,10 +305,15 @@ const AdminDashboard: React.FC = () => {
       content: post.content || '',
       excerpt: post.excerpt || ''
     });
-    setEditingPost(post.id);
+    setEditingPost(post.key);
+    
+    if (post.imageUrl) {
+      setImageUrl(post.imageUrl);
+    } else {
+      setImageUrl('');
+    }
   };
 
-  // Create the floating leaves elements
   const renderFloatingLeaves = () => {
     return Array.from({ length: 5 }, (_, i) => (
       <div 
@@ -135,29 +342,15 @@ const AdminDashboard: React.FC = () => {
       {/* CSS for Animations */}
       <style jsx global>{`
         @keyframes float {
-          0% {
-            transform: translateY(-5vh) translateX(-10px);
-            opacity: 0;
-          }
-          10% {
-            opacity: 1;
-          }
-          90% {
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(105vh) translateX(10px);
-            opacity: 0;
-          }
+          0% { transform: translateY(-5vh) translateX(-10px); opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { transform: translateY(105vh) translateX(10px); opacity: 0; }
         }
 
         @keyframes spin-slow {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
 
         .animate-spin-slow {
@@ -186,7 +379,23 @@ const AdminDashboard: React.FC = () => {
             <h1 className="text-2xl font-light text-gray-900">
               <span className="text-gold-600">Vīgintī Trēs</span> Admin
             </h1>
-            <div className="flex gap-4">
+            <div className="flex gap-4 items-center">
+              {user ? (
+                <div className="flex items-center gap-3">
+                  {user.photoURL && (
+                    <Image 
+                      src={user.photoURL} 
+                      width={32} 
+                      height={32} 
+                      className="rounded-full" 
+                      alt="Profile" 
+                    />
+                  )}
+                  <span className="text-sm text-gray-700">{user.displayName || user.email}</span>
+                </div>
+              ) : (
+                <div className="text-sm text-red-500">Not logged in</div>
+              )}
               <Link href="/">
                 <div className="flex items-center gap-2 text-gray-800 hover:text-gold-600 transition-colors duration-300">
                   <ChevronLeft size={16} />
@@ -199,9 +408,15 @@ const AdminDashboard: React.FC = () => {
 
         {/* Main Content */}
         <main className="max-w-6xl mx-auto px-6 py-8">
+          {error && (
+            <div className={`mb-4 p-3 rounded ${error.includes('successfully') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+              {error}
+            </div>
+          )}
+          
           <div className="grid grid-cols-12 gap-8">
             {/* Sidebar */}
-            <div className="col-span-3">
+            <div className="col-span-12 md:col-span-3">
               <div className="bg-white/50 backdrop-blur-sm p-6 rounded-sm border-l-2 border-gold-600/30 sticky top-28">
                 <h2 className="text-xl text-gray-800 mb-6 flex items-center gap-2">
                   <Wind className="text-gold-600" size={18} />
@@ -253,12 +468,14 @@ const AdminDashboard: React.FC = () => {
                 <div className="mt-12 text-sm text-gray-600">
                   <p>Last updated: {new Date().toLocaleDateString()}</p>
                   <p className="mt-2">Total entries: {posts.length}</p>
+                  <p className="mt-2">Published: {posts.filter(p => p.status === 'published').length}</p>
+                  <p className="mt-2">Drafts: {posts.filter(p => p.status === 'draft').length}</p>
                 </div>
               </div>
             </div>
             
             {/* Content Area */}
-            <div className="col-span-9">
+            <div className="col-span-12 md:col-span-9">
               {activeTab === 'create' && (
                 <div className="bg-white/70 backdrop-blur-sm p-6 border-t border-gold-600/10 rounded-sm shadow-sm">
                   <div className="flex justify-between items-center mb-6">
@@ -277,6 +494,12 @@ const AdminDashboard: React.FC = () => {
                     </div>
                   </div>
                   
+                  {!user && (
+                    <div className="bg-yellow-50 p-4 mb-6 border-l-4 border-yellow-500 text-yellow-700">
+                      You need to be logged in to create or edit posts.
+                    </div>
+                  )}
+                  
                   {previewMode ? (
                     <div className="bg-white p-6 rounded-sm border border-gold-600/10">
                       <h1 className="text-3xl font-light text-gray-900 mb-4">{newPost.title || 'Untitled Post'}</h1>
@@ -284,12 +507,25 @@ const AdminDashboard: React.FC = () => {
                         <span>Category: {newPost.category}</span>
                         <span>Date: {new Date().toLocaleDateString()}</span>
                       </div>
+                      
+                      {imageUrl && (
+                        <div className="mb-6">
+                          <Image
+                            src={imageUrl}
+                            alt={newPost.title}
+                            width={600}
+                            height={400}
+                            className="object-cover rounded-md"
+                          />
+                        </div>
+                      )}
+                      
                       <div className="prose max-w-none">
                         {newPost.content || 'No content yet...'}
                       </div>
                     </div>
                   ) : (
-                    <form onSubmit={handlePostSubmit} className="space-y-6">
+                    <form onSubmit={(e) => handlePostSubmit(e, 'published')} className="space-y-6">
                       <div>
                         <label className="block text-sm text-gray-700 mb-2">Title</label>
                         <input
@@ -300,6 +536,7 @@ const AdminDashboard: React.FC = () => {
                           className="w-full px-4 py-2 border border-gold-600/20 focus:border-gold-600/50 focus:ring-0 bg-white/50 outline-none"
                           placeholder="Enter post title"
                           required
+                          disabled={!user}
                         />
                       </div>
                       
@@ -310,6 +547,7 @@ const AdminDashboard: React.FC = () => {
                           value={newPost.category}
                           onChange={handleInputChange}
                           className="w-full px-4 py-2 border border-gold-600/20 focus:border-gold-600/50 focus:ring-0 bg-white/50 outline-none"
+                          disabled={!user}
                         >
                           <option value="journal">Journal</option>
                           <option value="archive">Archive</option>
@@ -326,7 +564,44 @@ const AdminDashboard: React.FC = () => {
                           className="w-full px-4 py-2 border border-gold-600/20 focus:border-gold-600/50 focus:ring-0 bg-white/50 outline-none"
                           placeholder="Brief excerpt or summary"
                           rows={2}
+                          disabled={!user}
                         />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm text-gray-700 mb-2">Featured Image</label>
+                        <div className="flex items-center gap-4">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                            className="border border-gold-600/20 p-2 w-full"
+                            disabled={!user}
+                          />
+                          
+                          {imageUrl && (
+                            <button
+                              type="button"
+                              onClick={handleDeleteImage}
+                              className="bg-red-100 text-red-700 px-3 py-1 rounded"
+                              disabled={!user}
+                            >
+                              Remove
+                            </button>
+                          )}
+                        </div>
+                        
+                        {imageUrl && (
+                          <div className="mt-4">
+                            <Image
+                              src={imageUrl}
+                              alt="Selected"
+                              width={300}
+                              height={200}
+                              className="object-cover rounded-md"
+                            />
+                          </div>
+                        )}
                       </div>
                       
                       <div>
@@ -339,13 +614,17 @@ const AdminDashboard: React.FC = () => {
                           placeholder="Write your content here..."
                           rows={10}
                           required
+                          disabled={!user}
                         />
                       </div>
                       
                       <div className="flex gap-4">
                         <button
                           type="submit"
-                          className="px-6 py-3 bg-gold-600/10 text-gold-600 hover:bg-gold-600/20 transition-colors flex items-center gap-2"
+                          className={`px-6 py-3 flex items-center gap-2 ${user 
+                            ? 'bg-gold-600/10 text-gold-600 hover:bg-gold-600/20' 
+                            : 'bg-gray-200 text-gray-500 cursor-not-allowed'} transition-colors`}
+                          disabled={loading || !user}
                         >
                           <Save size={16} />
                           <span>{editingPost ? 'Update Post' : 'Publish Post'}</span>
@@ -355,9 +634,27 @@ const AdminDashboard: React.FC = () => {
                           <button
                             type="button"
                             onClick={handleSaveDraft}
-                            className="px-6 py-3 bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                            className={`px-6 py-3 flex items-center gap-2 ${user 
+                              ? 'bg-white text-gray-600 hover:bg-gold-600/5' 
+                              : 'bg-gray-200 text-gray-500 cursor-not-allowed'} transition-colors`}
+                            disabled={loading || !user}
                           >
-                            Save as Draft
+                            <Save size={16} />
+                            <span>Save as Draft</span>
+                          </button>
+                        )}
+                        
+                        {editingPost && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingPost(null);
+                              setNewPost({ title: '', category: 'journal', content: '', excerpt: '' });
+                              setImageUrl('');
+                            }}
+                            className="px-6 py-3 bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                          >
+                            Cancel Editing
                           </button>
                         )}
                       </div>
@@ -365,120 +662,194 @@ const AdminDashboard: React.FC = () => {
                   )}
                 </div>
               )}
-              
+
               {activeTab === 'manage' && (
                 <div className="bg-white/70 backdrop-blur-sm p-6 border-t border-gold-600/10 rounded-sm shadow-sm">
-                  <h2 className="text-2xl font-light text-gray-900 mb-6">Manage Posts</h2>
+                  <h2 className="text-2xl font-light text-gray-900 mb-6">Manage All Posts</h2>
                   
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-gold-600/10">
-                          <th className="py-3 px-4 text-left text-sm text-gray-700">Title</th>
-                          <th className="py-3 px-4 text-left text-sm text-gray-700">Category</th>
-                          <th className="py-3 px-4 text-left text-sm text-gray-700">Date</th>
-                          <th className="py-3 px-4 text-left text-sm text-gray-700">Status</th>
-                          <th className="py-3 px-4 text-right text-sm text-gray-700">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {posts.map((post) => (
-                          <tr key={post.id} className="border-b border-gold-600/5 hover:bg-gold-600/5">
-                            <td className="py-3 px-4 text-gray-800">{post.title}</td>
-                            <td className="py-3 px-4 text-gray-600">{post.category}</td>
-                            <td className="py-3 px-4 text-gray-600">{post.date}</td>
-                            <td className="py-3 px-4">
-                              <span className={`px-2 py-1 text-xs ${
-                                post.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                              }`}>
-                                {post.status}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4 text-right">
-                              <div className="flex justify-end gap-2">
-                                <button 
-                                  onClick={() => handleEditPost(post)}
-                                  className="p-1 text-gray-600 hover:text-gold-600 transition-colors"
-                                >
-                                  <Edit size={16} />
-                                </button>
-                                <button 
-                                  onClick={() => handleDeletePost(post.id)}
-                                  className="p-1 text-gray-600 hover:text-red-600 transition-colors"
-                                >
-                                  <Trash2 size={16} />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-              
-              {(activeTab === 'journal' || activeTab === 'archive') && (
-                <div className="bg-white/70 backdrop-blur-sm p-6 border-t border-gold-600/10 rounded-sm shadow-sm">
-                  <h2 className="text-2xl font-light text-gray-900 mb-6">
-                    {activeTab === 'journal' ? 'Journal Entries' : 'Archives'}
-                  </h2>
-                  
-                  <div className="grid grid-cols-1 gap-6">
-                    {posts
-                      .filter(post => post.category === activeTab)
-                      .map(post => (
-                        <div key={post.id} className="p-4 border-l-2 border-gold-600/30 hover:bg-gold-600/5">
-                          <h3 className="text-xl text-gray-800 mb-2">{post.title}</h3>
-                          <div className="flex gap-4 text-sm text-gray-600 mb-3">
-                            <span>Date: {post.date}</span>
-                            <span>Status: {post.status}</span>
+                  {posts.length === 0 ? (
+                    <div className="text-center py-12 text-gray-600">
+                      No posts found. Create your first post!
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {posts.map((post) => (
+                        <div 
+                          key={post.key} 
+                          className="border-b border-gold-600/10 pb-4 grid grid-cols-12 gap-4 items-center"
+                        >
+                          <div className="col-span-12 md:col-span-6">
+                            <h3 className="text-lg text-gray-800">
+                              {post.title}
+                              {post.status === 'draft' && (
+                                <span className="ml-3 text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full">
+                                  Draft
+                                </span>
+                              )}
+                            </h3>
+                            <div className="text-sm text-gray-600 mt-1">
+                              <span className="mr-3">Category: {post.category}</span>
+                              <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                            </div>
                           </div>
-                          <p className="text-gray-700 mb-4">
-                            {post.excerpt || 'No excerpt available.'}
-                          </p>
-                          <div className="flex gap-2">
-                            <button 
+                          
+                          <div className="col-span-6 md:col-span-3">
+                            <div className="text-sm">
+                              <span className="text-gray-600">Likes: {post.likes || 0}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="col-span-6 md:col-span-3 flex justify-end gap-2">
+                            <button
                               onClick={() => handleEditPost(post)}
-                              className="px-3 py-1 text-sm text-gold-600 hover:bg-gold-600/10 transition-colors flex items-center gap-1"
+                              className="p-2 text-gold-600 hover:bg-gold-600/5 transition-colors"
+                              title="Edit"
                             >
-                              <Edit size={14} />
-                              <span>Edit</span>
+                              <Edit size={16} />
                             </button>
-                            <button 
-                              onClick={() => handleDeletePost(post.id)}
-                              className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-1"
+                            
+                            <button
+                              onClick={() => handleDeletePost(post.key)}
+                              className="p-2 text-red-600 hover:bg-red-50 transition-colors"
+                              title="Delete"
+                              disabled={loading}
                             >
-                              <Trash2 size={14} />
-                              <span>Delete</span>
+                              <Trash2 size={16} />
                             </button>
                           </div>
                         </div>
                       ))}
-                    
-                    {posts.filter(post => post.category === activeTab).length === 0 && (
-                      <div className="text-center py-8">
-                        <p className="text-gray-600">No {activeTab} entries found.</p>
-                        <button
-                          onClick={() => setActiveTab('create')}
-                          className="mt-4 px-4 py-2 bg-gold-600/10 text-gold-600 hover:bg-gold-600/20 transition-colors inline-flex items-center gap-2"
-                        >
-                          <Plus size={16} />
-                          <span>Create New Entry</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'journal' && (
+                <div className="bg-white/70 backdrop-blur-sm p-6 border-t border-gold-600/10 rounded-sm shadow-sm">
+                  <h2 className="text-2xl font-light text-gray-900 mb-6">Journal Entries</h2>
+                  
+                  {posts.filter(post => post.category === 'journal').length === 0 ? (
+                    <div className="text-center py-12 text-gray-600">
+                      No journal entries found.
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {posts
+                        .filter(post => post.category === 'journal')
+                        .map((post) => (
+                          <div 
+                            key={post.key} 
+                            className="border-b border-gold-600/10 pb-4 grid grid-cols-12 gap-4 items-center"
+                          >
+                            <div className="col-span-12 md:col-span-6">
+                              <h3 className="text-lg text-gray-800">
+                                {post.title}
+                                {post.status === 'draft' && (
+                                  <span className="ml-3 text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full">
+                                    Draft
+                                  </span>
+                                )}
+                              </h3>
+                              <div className="text-sm text-gray-600 mt-1">
+                                <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                            
+                            <div className="col-span-6 md:col-span-3">
+                              <div className="text-sm">
+                                <span className="text-gray-600">Likes: {post.likes || 0}</span>
+                              </div>
+                            </div>
+                            
+                            <div className="col-span-6 md:col-span-3 flex justify-end gap-2">
+                              <button
+                                onClick={() => handleEditPost(post)}
+                                className="p-2 text-gold-600 hover:bg-gold-600/5 transition-colors"
+                                title="Edit"
+                              >
+                                <Edit size={16} />
+                              </button>
+                              
+                              <button
+                                onClick={() => handleDeletePost(post.key)}
+                                className="p-2 text-red-600 hover:bg-red-50 transition-colors"
+                                title="Delete"
+                                disabled={loading}
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'archive' && (
+                <div className="bg-white/70 backdrop-blur-sm p-6 border-t border-gold-600/10 rounded-sm shadow-sm">
+                  <h2 className="text-2xl font-light text-gray-900 mb-6">Archives</h2>
+                  
+                  {posts.filter(post => post.category === 'archive').length === 0 ? (
+                    <div className="text-center py-12 text-gray-600">
+                      No archived posts found.
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {posts
+                        .filter(post => post.category === 'archive')
+                        .map((post) => (
+                          <div 
+                            key={post.key} 
+                            className="border-b border-gold-600/10 pb-4 grid grid-cols-12 gap-4 items-center"
+                          >
+                            <div className="col-span-12 md:col-span-6">
+                              <h3 className="text-lg text-gray-800">
+                                {post.title}
+                                {post.status === 'draft' && (
+                                  <span className="ml-3 text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full">
+                                    Draft
+                                  </span>
+                                )}
+                              </h3>
+                              <div className="text-sm text-gray-600 mt-1">
+                                <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                            
+                            <div className="col-span-6 md:col-span-3">
+                              <div className="text-sm">
+                                <span className="text-gray-600">Likes: {post.likes || 0}</span>
+                              </div>
+                            </div>
+                            
+                            <div className="col-span-6 md:col-span-3 flex justify-end gap-2">
+                              <button
+                                onClick={() => handleEditPost(post)}
+                                className="p-2 text-gold-600 hover:bg-gold-600/5 transition-colors"
+                                title="Edit"
+                              >
+                                <Edit size={16} />
+                              </button>
+                              
+                              <button
+                                onClick={() => handleDeletePost(post.key)}
+                                className="p-2 text-red-600 hover:bg-red-50 transition-colors"
+                                title="Delete"
+                                disabled={loading}
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           </div>
         </main>
-
-        {/* Footer */}
-        <footer className="py-4 text-center text-gray-600 text-sm bg-white/50 backdrop-blur-sm mt-12">
-          <p>© 2024 · <span className="text-gold-600">Vīgintī Trēs Admin Panel</span></p>
-        </footer>
       </div>
     </div>
   );
