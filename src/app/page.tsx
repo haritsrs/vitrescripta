@@ -132,36 +132,17 @@ const LandingPage = () => {
 
       {/* Main Content */}
       <div className={`relative z-10 transform transition-opacity duration-1000 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-        {/* Header */}
-        <header className="py-6 px-6 bg-white/80 backdrop-blur-sm sticky top-0 z-20 border-b border-gold-600/10">
-          <div className="max-w-6xl mx-auto flex justify-between items-center">
-            <h1 className="text-2xl font-light text-gray-900">
-              <span className="text-gold-600">Vīgintī Trēs</span> in scriptura
-            </h1>
-            <nav className="flex gap-12">
-              {['journal', 'archive', 'about'].map((item) => (
-                <Link href={`/${item}`} key={item}>
-                  <span className="text-gray-800 hover:text-gold-600 transition-colors duration-300 lowercase relative group tracking-wide cursor-pointer">
-                    {item}
-                    <span className="absolute -bottom-1 left-0 w-full h-px bg-gold-600/30 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
-                  </span>
-                </Link>
-              ))}
-            </nav>
-          </div>
-        </header>
-
         {/* Main Content */}
         <main className="max-w-6xl mx-auto px-6 py-16">
-<div className="grid grid-cols-12 gap-8">
-  {/* Profile Image */}
-  <div className="col-span-3 flex flex-col items-center">
-    <div className="rounded-full overflow-hidden border-4 border-gold-600/20 mb-4 shadow-lg">
-      <Img src="/img/pfp.JPG" alt="Profile" width={192} height={192} className="w-48 h-48 object-cover" />
-    </div>
-    <h3 className="text-xl text-gray-800 font-medium mt-2">Harits Raharjo Setiono</h3>
-    <p className="text-gray-600 text-sm">University Student</p>
-  </div>
+          <div className="grid grid-cols-12 gap-8">
+            {/* Profile Image */}
+            <div className="col-span-3 flex flex-col items-center">
+              <div className="rounded-full overflow-hidden border-4 border-gold-600/20 mb-4 shadow-lg">
+                <Img src="/img/pfp.JPG" alt="Profile" width={192} height={192} className="w-48 h-48 object-cover" />
+              </div>
+              <h3 className="text-xl text-gray-800 font-medium mt-2">Harits Raharjo Setiono</h3>
+              <p className="text-gray-600 text-sm">University Student</p>
+            </div>
             
             {/* Main Content */}
             <div className="col-span-9 space-y-8">
