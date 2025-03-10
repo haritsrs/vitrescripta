@@ -1,2 +1,2 @@
 ## Vīgintī Trēs in Scriptura
-A Writing website
+A Writing website for growth and development

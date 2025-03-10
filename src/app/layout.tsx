@@ -97,23 +97,29 @@ export default function RootLayout({
         {/* Main Content */}
         <div className="relative z-10 transform transition-opacity duration-1000 opacity-100">
           {/* Header */}
-          <header className="py-6 px-6 bg-white/80 backdrop-blur-sm sticky top-0 z-20 border-b border-gold-600/10">
-            <div className="max-w-6xl mx-auto flex justify-between items-center">
-              <h1 className="text-2xl font-light text-gray-900">
-                <span className="text-gold-600">Vīgintī Trēs</span> in scriptura
-              </h1>
-              <nav className="flex gap-12">
-                {['journal', 'archive', 'about'].map((item) => (
-                  <Link href={`/${item}`} key={item}>
-                    <span className="text-gray-800 hover:text-gold-600 transition-colors duration-300 lowercase relative group tracking-wide cursor-pointer">
-                      {item}
-                      <span className="absolute -bottom-1 left-0 w-full h-px bg-gold-600/30 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
-                    </span>
-                  </Link>
-                ))}
-              </nav>
-            </div>
-          </header>
+          {/* Header */}
+<header className="py-6 px-6 bg-white/80 backdrop-blur-sm sticky top-0 z-20 border-b border-gold-600/10">
+  <div className="max-w-6xl mx-auto flex justify-between items-center">
+    <h1 className="text-2xl font-light text-gray-900">
+      <Link href="/">
+        <span className="text-gold-600 cursor-pointer hover:text-gold-700 transition-colors duration-300">
+          Vīgintī Trēs
+        </span>
+      </Link>{' '}
+      in scriptura
+    </h1>
+    <nav className="flex gap-12">
+      {['journal', 'archive', 'about'].map((item) => (
+        <Link href={`/${item}`} key={item}>
+          <span className="text-gray-800 hover:text-gold-600 transition-colors duration-300 lowercase relative group tracking-wide cursor-pointer">
+            {item}
+            <span className="absolute -bottom-1 left-0 w-full h-px bg-gold-600/30 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+          </span>
+        </Link>
+      ))}
+    </nav>
+  </div>
+</header>
 
           {/* Page Content */}
           <main className="max-w-6xl mx-auto px-6 py-16">
