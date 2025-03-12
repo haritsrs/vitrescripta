@@ -74,7 +74,7 @@ export default function RootLayout({
         `}</style>
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-stone-50 font-sans relative overflow-hidden`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-stone-50 font-sans relative`}
       >
         {/* Background Elements */}
         <div className="fixed inset-0 bg-gradient-to-br from-stone-50 via-white to-stone-50"></div>
@@ -96,7 +96,6 @@ export default function RootLayout({
 
         {/* Main Content */}
         <div className="relative z-10 transform transition-opacity duration-1000 opacity-100">
-          {/* Header */}
           {/* Header */}
 <header className="py-6 px-6 bg-white/80 backdrop-blur-sm sticky top-0 z-20 border-b border-gold-600/10">
   <div className="max-w-6xl mx-auto flex justify-between items-center">
@@ -122,7 +121,7 @@ export default function RootLayout({
 </header>
 
           {/* Page Content */}
-          <main className="max-w-6xl mx-auto px-6 py-16">
+          <main className="max-w-6xl mx-auto px-6 py-16 relative z-10">
             {children}
           </main>
 
