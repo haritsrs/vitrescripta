@@ -22,6 +22,7 @@ const WRITING_QUOTES: WritingQuote[] = [
   { text: "You can always edit a bad page. You can't edit a blank page", author: "Jodi Picoult" },
   { text: "Write with the door closed, rewrite with the door open", author: "Stephen King" },
   { text: "The scariest moment is always just before you start", author: "Stephen King" }
+  { text: "The first draft is just you telling yourself the story", author: "Terry Pratchett" },
 ];
 
 export default function RootLayout({
